@@ -44,19 +44,23 @@ conf = configparser.RawConfigParser()
 conf.read("grafana-sync.conf")
 
 source   = conf["grafana"]["source"]
-target   = conf["grafana"]["source"]
-username = conf["grafana"]["username"]
-password = decrypt_pass(conf["grafana"]["password"])
-apikey   = conf["grafana"]["apikey"]
+target   = conf["grafana"]["target"]
+source_username = conf["grafana"]["source_username"]
+source_password = decrypt_pass(conf["grafana"]["source_password"])
+source_apikey   = conf["grafana"]["source_apikey"]
+target_username = conf["grafana"]["target_username"]
+target_password = decrypt_pass(conf["grafana"]["target_password"])
+target_apikey   = conf["grafana"]["target_apikey"]
 json_dir = conf["grafana"]["json_dir"]
 
 # Build up basic auth encoded string
-auth = str(base64.b64encode(bytes('%s:%s' % (username,password), "utf-8")),"ascii").strip()
+source_auth = str(base64.b64encode(bytes('%s:%s' % (source_username,source_password), "utf-8")),"ascii").strip()
+target_auth = str(base64.b64encode(bytes('%s:%s' % (target_username,target_password), "utf-8")),"ascii").strip()
 
 # Sync Datasources
 print("Syncing Datasources")
 datasources_in = read_file("datasources.json")   # Dump from source server
-datasources_out = get_data(target + "/datasources","Bearer " + apikey)
+datasources_out = get_data(target + "/datasources","Bearer " + target_apikey)
 # Now store a mapping of each team id as found on this server
 datasources_out_map = {}
 for datasource in datasources_out:
@@ -69,7 +73,7 @@ for datasource in datasources_in:
   if name not in datasources_out_map:
     del datasource["id"]
     try : 
-      put_data(target + "/datasources", "Bearer " + apikey, "POST", datasource)
+      put_data(target + "/datasources", "Bearer " + target_apikey, "POST", datasource)
       print("%s datasource created successfully" % name)
     except Exception as e:
       print("%s datasource could not be created" % name)
@@ -79,7 +83,7 @@ for datasource in datasources_in:
     id_out = datasources_out_map[name]
     datasource["id"] = id_out
     try : 
-      put_data(target + "/datasources/" + str(id_out), "Bearer " + apikey, "PUT", datasource)
+      put_data(target + "/datasources/" + str(id_out), "Bearer " + target_apikey, "PUT", datasource)
       print("%s datasource updated successfully" % name)
     except Exception as e:
       print("%s datasource could not be updated" % name)
@@ -88,7 +92,7 @@ for datasource in datasources_in:
 # Sync Teams 
 print("Syncing Teams")
 teams_in = read_file("teams.json")   # Dump from source server
-teams_out = get_data(target + "/teams/search?query=", "Bearer " + apikey)  # Get this server
+teams_out = get_data(target + "/teams/search?query=", "Bearer " + target_apikey)  # Get this server
 # Now store a mapping of each team id as found on this server
 teams_out_map = {}
 for team in teams_out["teams"]:
@@ -103,7 +107,7 @@ for team in teams_in["teams"]:
   try:
     id_out = teams_out_map[name]  # Yes
     print(name + " : Update existing")
-    put_data(target + "/teams/" + str(id_out), "Bearer " + apikey, "PUT", team)
+    put_data(target + "/teams/" + str(id_out), "Bearer " + target_apikey, "PUT", team)
   except:
     print(name + " : Create New")
     put_data(target + "/teams", "Bearer " + apikey, "POST", team)
@@ -112,7 +116,7 @@ for team in teams_in["teams"]:
 # Sync Users
 print("Syncing Users")
 users_in = read_file("users.json")   # Dump from source server
-users_out = get_data(target + "/users", "Basic " + auth)  # Get this server
+users_out = get_data(target + "/users", "Basic " + target_auth)  # Get this server
 # Now store a mapping of each team id as found on this server
 users_out_map = {}
 for user in users_out:
@@ -129,12 +133,12 @@ for user in users_in:
   try:
     id_out = users_out_map[login]  # Yes
     print(login + " : Update existing")
-    put_data(target + "/users/" + str(id_out), "Basic " + auth , "PUT", user)
+    put_data(target + "/users/" + str(id_out), "Basic " + target_auth , "PUT", user)
   except:
     print("\n" + login + " : Create New")
     user["password"] = "trev"
     print(user)
-    put_data(target + "/admin/users", "Basic " + auth, "POST", user)
+    put_data(target + "/admin/users", "Basic " + target_auth, "POST", user)
 
 # Add users to teams
 print("Adding users to teams")
@@ -148,7 +152,7 @@ for member in members_in:
       team_name = teams_in_id[team_in_id]
       team_out_id = teams_out_map[team_name]
       doc = { "userId" : id_out }
-      put_data(target + "/teams/" + str(team_out_id) + "/members", "Basic " + auth , "POST", doc)
+      put_data(target + "/teams/" + str(team_out_id) + "/members", "Basic " + target_auth , "POST", doc)
       print("Adding %s to %s" % ( login,team_name) )
     except:
       pass
@@ -157,7 +161,7 @@ for member in members_in:
 # Sync Folders
 print("Syncing Folders")
 folders_in = read_file("folders.json")
-folders_out =  get_data(target + "/folders","Bearer " + apikey)
+folders_out =  get_data(target + "/folders","Bearer " + target_apikey)
 folders_out_uid_map = {}
 folders_out_id_map = {}
 for folder in folders_out:
@@ -175,7 +179,7 @@ for folder in folders_in:
   if uid in folders_out_uid_map:
     print(name + " : Update existing")
     try:
-      put_data(target + "/folders/" + uid, "Bearer " + apikey, "PUT", folder)
+      put_data(target + "/folders/" + uid, "Bearer " + target_apikey, "PUT", folder)
     except:
       pass
   else:
@@ -187,10 +191,10 @@ for folder in folders_in:
 print("Syncing Folder Permissions")
 folderPerms_in = read_file("folder_permissions.json")
 folderPerms_out = {}
-folders = get_data(target + "/folders","Bearer " + apikey)
+folders = get_data(target + "/folders","Bearer " + target_apikey)
 for folder in folders :
   uid = folder["uid"]
-  permission = get_data(target + "/folders/" + uid + "/permissions","Bearer " + apikey)
+  permission = get_data(target + "/folders/" + uid + "/permissions","Bearer " + target_apikey)
   folderPerms_out[uid] = permission
 
 for uid in folderPerms_in:
@@ -216,7 +220,7 @@ for uid in folderPerms_in:
     permission_set.append(new_permission)
   permission_list["items"] = permission_set
   try:
-    put_data(target + "/folders/" + uid + "/permissions", "Bearer " + apikey, "POST", permission_list)
+    put_data(target + "/folders/" + uid + "/permissions", "Bearer " + target_apikey, "POST", permission_list)
     print("%s Success permissions" % name)
   except :
     print("%s Unable to apply permissions" % name)
@@ -225,7 +229,7 @@ for uid in folderPerms_in:
 print("Syncing Dashboards")
 dashboards_in_inventory = read_file("dashboard_list.json")
 dashboards_in = read_file("dashboards.json")
-dashboards_out = get_data(target +  "/search?query=&type=dash-db" ,"Bearer " + apikey)
+dashboards_out = get_data(target +  "/search?query=&type=dash-db" ,"Bearer " + target_apikey)
 dashboards_target = {}
 for dashboard in dashboards_out:
   dashboards_target[dashboard["uid"]] = dashboard["id"]   
@@ -247,7 +251,7 @@ for dashboard in dashboards_in_inventory:
       dashboard_out["folderId"] = folder_out_id
       dashboard_out["overwrite"] = True
       dashboard_out["dashboard"] = dashboard
-      put_data(target + "/dashboards/db", "Bearer " + apikey, "POST", dashboard_out)
+      put_data(target + "/dashboards/db", "Bearer " + target_apikey, "POST", dashboard_out)
       print("%s Success Dashboard Created" % name)
     except Exception as e:
       print("%s Unable to Create Dashboard" % name)
@@ -270,7 +274,7 @@ for dashboard in dashboards_in:
 
   #print("FolderInId:%s FolderOutId:%s  UIDIn:%s"  % (folder_in_id, folder_out_id, folder_in_uid))
   try:
-    put_data(target + "/dashboards/db", "Bearer " + apikey, "POST", dashboard)
+    put_data(target + "/dashboards/db", "Bearer " + target_apikey, "POST", dashboard)
     print("%s Success Dashboard Updated" % name)
   except Exception as e:
     print("%s Unable to Update Dashboard" % name)
