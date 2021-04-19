@@ -27,7 +27,7 @@ You could run the script on any number of Grafana "satellite" servers and sync t
 
 ### To Do
 * Dashboard permissions
-* Alerts (will probably not do this)
+* Alert Rules and Notification Channels 
 * Combine "get" and "put" scripts into a single module
 * Incorporate "last updated" in the dashboard queries and see if there is a way to do a bi-directional sync
 * Better error handling, logging and comments
