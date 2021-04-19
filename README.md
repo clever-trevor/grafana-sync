@@ -31,6 +31,7 @@ You could run the script on any number of Grafana "satellite" servers and sync t
 * Combine "get" and "put" scripts into a single module
 * Incorporate "last updated" in the dashboard queries and see if there is a way to do a bi-directional sync
 * Better error handling, logging and comments
+* HUGE tidy.  I wrote this as I was working out the Grafana data model, so haven't put any thought into the script or the Python data structures, functions, etc
 * And almost certainly other things that I find as I use this more
 
 ### Setup 
