@@ -69,3 +69,4 @@ So the script has to do a mapping between Source (ID and UID) to Target (ID and 
 Also, any calls to the Users API cannot be done with a token.  This is because these objects are not stored within a Grafana Organisation.  Instead, you have to create an Administrative userid / password and pass these in using basic-auth....not very nice.
 
 Because of this, I put in a simple encryption of the admin password to avoid prying eyes, but it is by no means a comprehensive solution so do build your own!
+
