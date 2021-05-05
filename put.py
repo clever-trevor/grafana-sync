@@ -113,7 +113,7 @@ for team in teams_in["teams"]:
     put_data(target + "/teams", "Bearer " + apikey, "POST", team)
 
 
-# Sync Users
+teams_out_map# Sync Users
 print("Syncing Users")
 users_in = read_file("users.json")   # Dump from source server
 users_out = get_data(target + "/users", "Basic " + target_auth)  # Get this server
@@ -292,3 +292,43 @@ for dashboard in dashboards_in:
     print(json.dumps(dashboard))
     print(e)
     
+# Dashboard permissions
+permissions_in = read_file("dashboard_permissions.json")
+for dashboard_in_uid in permissions_in:
+  dashboard_in_permissions = json.loads(permissions_in[dashboard_in_uid])
+  dashboard_out_id = dashboards_target[dashboard_in_uid]
+  permissions_out = []
+  print("DashboardID: " + dashboard_in_uid)
+  for permission in dashboard_in_permissions:
+    if permission["inherited"] == True:
+      print("  Ignoring inherited")
+      continue
+
+    perm = ""
+    if permission["teamId"] != 0 :
+      team_in_id = permission["teamId"]
+      team_name = teams_in_id[team_in_id]
+      team_out_id = teams_out_map[team_name]
+      perm = { "teamId":team_out_id,"permission":permission["permission"] }
+      print("  TEAM %s In:%s Out:%s" % (team_name, team_in_id,team_out_id))
+    elif permission["userId"] != 0 :
+      user_in_id = permission["userId"]
+      login = users_in_id[user_in_id]
+      user_out_id = users_out_map[login]
+      perm = { "userId":user_out_id,"permission":permission["permission"] }
+      print("  USER %s IN:%s Out:%s" % (login, user_in_id,user_out_id))
+    else : 
+      print("  Default permissions - Ignoring")
+      continue
+
+    permissions_out.append(perm)
+
+  if permissions_out :
+    payload = { "items": permissions_out }
+#    print( "/dashboards/id/" + str(dashboard_out_id) + "/permissions")
+    print(" New Permissions:" + str(payload))
+    put_data(target + "/dashboards/id/" + str(dashboard_out_id) + "/permissions", "Bearer " + target_apikey, "POST", payload)
+  #print(dashboard_in_uid)
+  #print(dashboard_out_id)
+  #print(dashboard_in_permissions)
+  

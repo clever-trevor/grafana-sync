@@ -70,7 +70,7 @@ for dashboard in dashboard_list:
   id = str(dashboard["id"])
   uid = dashboard["uid"]
   permission = get_data(source + "/dashboards/id/" + id + "/permissions","Bearer " + source_apikey, "temp.json")
-  permissions[id] = json.dumps(permission)
+  permissions[uid] = json.dumps(permission)
   dashboard = get_data(source + "/dashboards/uid/" + uid,"Bearer " + source_apikey, "temp.json")
   dashboards.append(dashboard)
 
@@ -78,5 +78,5 @@ f = open(json_dir + "/dashboards.json", "w")
 f.write(str(json.dumps(dashboards)))
 f.close()
 f = open(json_dir + "/dashboard_permissions.json", "w")
-f.write(str(permissions))
+f.write(json.dumps(permissions))
 f.close()
