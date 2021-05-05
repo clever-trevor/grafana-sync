@@ -184,7 +184,7 @@ for folder in folders_in:
       pass
   else:
     print(name + " : Create New")
-    put_data(target + "/folders", "Bearer " + apikey, "POST", folder)
+    put_data(target + "/folders", "Bearer " + target_apikey, "POST", folder)
 
 
 # Sync Folder Permissions
@@ -227,21 +227,26 @@ for uid in folderPerms_in:
 
 # Sync Dashboards
 print("Syncing Dashboards")
-dashboards_in_inventory = read_file("dashboard_list.json")
+# Get inventory from target system and build dictionary of ID vs UID
 dashboards_in = read_file("dashboards.json")
 dashboards_out = get_data(target +  "/search?query=&type=dash-db" ,"Bearer " + target_apikey)
 dashboards_target = {}
 for dashboard in dashboards_out:
   dashboards_target[dashboard["uid"]] = dashboard["id"]   
-  
-
-
+ 
+# Now process each dashboard from the source system
+dashboards_in_inventory = read_file("dashboard_list.json")
 for dashboard in dashboards_in_inventory:
   uid = dashboard["uid"]
   name = dashboard["title"]
-  folder_in = dashboard["folderId"]
-  folder_in_uid = folders_in_id_map[folder_in]
-  folder_out_id = folders_out_uid_map[folder_in_uid]
+  # If no folder is defined, then it is stored under the "General" default folder (id=0)
+  try:
+    folder_in = dashboard["folderId"]
+    folder_in_uid = folders_in_id_map[folder_in]
+    folder_out_id = folders_out_uid_map[folder_in_uid]
+  except :
+    folder_in = 0
+    folder_out_id = 0
   del dashboard["id"]
   dashboard["folderId"] = folder_out_id
   if uid not in dashboards_target :
@@ -262,11 +267,17 @@ for dashboard in dashboards_in:
 #  print(json.dumps(dashboard))
   name = dashboard["dashboard"]["title"]
   dash_uid_in = dashboard["dashboard"]["uid"] 
-  dash_id_out = dashboards_target[dash_uid_in]
+  try:
+    dash_id_out = dashboards_target[dash_uid_in]
+  except:
+    dash_id_out = 0
 
-  folder_in_id = dashboard["meta"]["folderId"]
-  folder_in_uid = folders_in_id_map[folder_in_id]
-  folder_out_id = folders_out_uid_map[folder_in_uid]
+  try:
+    folder_in_id = dashboard["meta"]["folderId"]
+    folder_in_uid = folders_in_id_map[folder_in_id]
+    folder_out_id = folders_out_uid_map[folder_in_uid]
+  except:
+    folder_out_id = 0
   dashboard["dashboard"]["id"] = dash_id_out
   dashboard["folderId"] = folder_out_id
   dashboard["overwrite"] = True

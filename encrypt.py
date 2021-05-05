@@ -3,7 +3,6 @@
 from cryptography.fernet import Fernet
 from getpass import getpass
 
-import sys
 import os
 
 key = Fernet.generate_key()
