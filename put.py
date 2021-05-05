@@ -119,7 +119,7 @@ for team in teams_in["teams"]:
     put_data(target + "/teams/" + str(id_out), "Bearer " + target_apikey, "PUT", team)
   except:
     print(" %s : Create New" % name)
-    put_data(target + "/teams", "Bearer " + apikey, "POST", team)
+    put_data(target + "/teams", "Bearer " + target_apikey, "POST", team)
 
 
 ############################################################
