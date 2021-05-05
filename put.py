@@ -336,8 +336,6 @@ for dashboard_in_uid in permissions_in:
       print("  Ignoring inherited")
       continue
 
-    perm = "" # Empty permission
-
     # Permission is team related
     if permission["teamId"] != 0 :
       # Remap source team Id to target system
@@ -346,6 +344,7 @@ for dashboard_in_uid in permissions_in:
       team_out_id = teams_out_map[team_name]
       perm = { "teamId":team_out_id,"permission":permission["permission"] }
       print("  Team:%s In:%s Out:%s" % (team_name, team_in_id,team_out_id))
+      permissions_out.append(perm)   # Add permissions to list
     # Permission is user related
     elif permission["userId"] != 0 :
       # Remap source user Id to target system
@@ -354,8 +353,7 @@ for dashboard_in_uid in permissions_in:
       user_out_id = users_out_map[login]
       perm = { "userId":user_out_id,"permission":permission["permission"] }
       print("  User:%s In:%s Out:%s" % (login, user_in_id,user_out_id))
-
-    permissions_out.append(perm)   # Add permissions to list
+      permissions_out.append(perm)   # Add permissions to list
 
   # Build payload JSON
   payload = { "items": permissions_out }
@@ -366,7 +364,7 @@ for dashboard_in_uid in permissions_in:
     put_data(target + "/dashboards/id/" + str(dashboard_out_id) + "/permissions", "Bearer " + target_apikey, "POST", payload)
     print("  Successfully loaded")
   except Exception as e:
-    print("  ERROR Ddashboard permissions could not be updated")
+    print("  ERROR Dashboard permissions could not be updated")
     print("  Payload:%s" % str(payload))
     print("  %s" % e)
   
