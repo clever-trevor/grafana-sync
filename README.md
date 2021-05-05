@@ -33,6 +33,7 @@ You could run the script on any number of Grafana "satellite" servers and sync t
 * Incorporate "last updated" in the dashboard queries and see if there is a way to do a bi-directional sync
 * Better error handling, logging and comments
 * HUGE tidy.  I wrote this whilst working out the Grafana data model, so haven't put any real thought into optimising or tidying up the script
+* Support for HTTPS endpoints
 
 ### Setup 
 * On both source and target systems, log on to Grafana and create an admin userid.  Encrypt the passwords using the steps below
