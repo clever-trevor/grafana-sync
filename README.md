@@ -29,9 +29,7 @@ You could run the script on any number of Grafana "satellite" servers and sync t
 
 ### To Do
 * Alert Rules and Notification Channels 
-* Combine "get" and "put" scripts into a single module
 * Incorporate "last updated" in the dashboard queries and see if there is a way to do a bi-directional sync
-* Better error handling, logging and comments
 * HUGE tidy.  I wrote this whilst working out the Grafana data model, so haven't put any real thought into optimising or tidying up the script
 
 ### Setup 
@@ -48,13 +46,14 @@ When encrypted password is shown, copy and paste into the grafana-sync.conf file
 
 ### Running the script
 
-* Run the "get" script
-```./get.py```
+* Dump data only from source system
+```./grafana-sync.py GET```
 * If all works, there should be a bunch of json files under the ./json directory
 
-* Run the "put" script
-```./put.py```
-* Any errors will be written to screen
+* Dump data AND load into target system
+```./grafana-sync.py SYNC```
+
+* All messages are written to grafana-sync.log file
 
 
 ### Complex data model
